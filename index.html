@@ -53,6 +53,7 @@
 
     .multiplier-track {
       display: flex;
+      will-change: transform;
     }
 
     .multiplier {
@@ -221,7 +222,6 @@
   </div>
 
   <div id="bigWin" onclick="hideBigWin()">
-    <div>THẮNG LỚN</div>
     <div id="bigWinAmount">5.000.000 VNĐ</div>
   </div>
 
@@ -274,30 +274,50 @@
       spinBtn.disabled = true;
       let spinInterval = setInterval(drawGrid, 200);
 
+      // Bắt đầu chạy multiplier track
+      const track = document.getElementById("multiplierTrack");
+      track.style.transition = "none";
+      let scrollX = 0;
+      let scrollSpeed = 6;
+      let loop = setInterval(() => {
+        scrollX += scrollSpeed;
+        track.style.transform = `translateX(-${scrollX}px)`;
+      }, 30);
+
       setTimeout(() => {
         clearInterval(spinInterval);
+        clearInterval(loop);
+
         const index = Math.floor(Math.random() * multipliers.length);
-        currentMultiplier = multipliers[index];
+        const multiplierWidth = 68;
+        scrollX = index * multiplierWidth;
+        track.style.transition = "transform 0.5s ease-out";
+        track.style.transform = `translateX(-${scrollX}px)`;
 
-        const winAmount = getRandomWinAmount();
-        const finalWin = winAmount * currentMultiplier;
+        setTimeout(() => {
+          const selectedMultiplier = multipliers[index];
+          currentMultiplier = selectedMultiplier;
 
-        balance -= bet;
-        balance += finalWin;
+          const winAmount = getRandomWinAmount();
+          const finalWin = winAmount * selectedMultiplier;
 
-        balanceEl.textContent = balance.toLocaleString('vi-VN');
-        winEl.textContent = finalWin.toLocaleString('vi-VN');
+          balance -= bet;
+          balance += finalWin;
 
-        if (winAmount > 0) {
-          tickerText.textContent = `Phong Phú đã thắng ${finalWin.toLocaleString('vi-VN')} !!`;
-        }
+          balanceEl.textContent = balance.toLocaleString('vi-VN');
+          winEl.textContent = finalWin.toLocaleString('vi-VN');
 
-        if (finalWin >= 2000000) {
-          bigWinAmount.textContent = `${finalWin.toLocaleString('vi-VN')} VNĐ`;
-          bigWin.style.display = "flex";
-        }
+          if (winAmount > 0) {
+            tickerText.textContent = `Phong Phú đã thắng ${finalWin.toLocaleString('vi-VN')} !!`;
+          }
 
-        spinBtn.disabled = false;
+          if (finalWin >= 2000000) {
+            bigWinAmount.innerHTML = `THẮNG LỚN<br>${finalWin.toLocaleString('vi-VN')} VNĐ<br><span style="font-size:18px">Số dư hiện tại: ${balance.toLocaleString('vi-VN')} VNĐ</span>`;
+            bigWin.style.display = "flex";
+          }
+
+          spinBtn.disabled = false;
+        }, 600);
       }, 5000);
     }
 
